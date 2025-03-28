@@ -100,7 +100,19 @@ public class PanImageTestController {
         File defFile = new File("D:\\MMO_Pictures\\AlienBlackout\\2025_03");
         fileChooser.setInitialDirectory(defFile);
         Stage stage = (Stage) btnOpenImage.getScene().getWindow();
-        File selectedImageFile = fileChooser.showOpenDialog( stage );
+        File selectedImageFile = null;
+        try {
+            selectedImageFile = fileChooser.showOpenDialog(stage);
+        }
+        catch (Exception e)
+        {
+            /*
+             We can ignore the exception and just continue because
+             we initialized selectedImageFile with null
+             */
+            setStatus("Bogus starting file path for fileChooser");
+            return;
+        }
         if (selectedImageFile == null )
         {
             setStatus("No Image Chosen");
