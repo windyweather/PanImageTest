@@ -9,12 +9,11 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-
 <SplitPane minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="653.0" prefWidth="894.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.windyweather.panimagetest.PanImageTestController">
   <items>
       <VBox prefHeight="490.0" prefWidth="738.0">
          <children>
-            <ScrollPane fx:id="spScrollPane" centerShape="false" hmax="800000.0" minHeight="-Infinity" minWidth="-Infinity" pannable="true" prefHeight="200.0" prefWidth="200.0" scaleShape="false" vmax="800000.0" VBox.vgrow="ALWAYS">
+            <ScrollPane fx:id="spScrollPane" centerShape="false" hmax="100000.0" hmin="-100000.0" minHeight="-Infinity" minWidth="-Infinity" pannable="true" prefHeight="200.0" prefWidth="200.0" scaleShape="false" vmax="100000.0" vmin="-100000.0" VBox.vgrow="ALWAYS">
                <content>
                   <ImageView fx:id="imgImageView" focusTraversable="true" pickOnBounds="true" preserveRatio="true" />
                </content>

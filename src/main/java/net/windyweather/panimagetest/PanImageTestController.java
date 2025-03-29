@@ -81,9 +81,11 @@ public class PanImageTestController {
                      */
                         double dScale = imgImageView.getScaleX();
                         if (deltaY > 0.0 && dScale > 10.0) {
+                            setStatus("Don't scale too big");
                             event.consume();
                             return;
                         } else if (deltaY < 0.0 && dScale < 0.20) {
+                            setStatus("Don't scale too small");
                             event.consume();
                             return;
                         }
@@ -93,25 +95,31 @@ public class PanImageTestController {
                         }
                         imgImageView.setScaleX(imgImageView.getScaleX() * zoomFactor);
                         imgImageView.setScaleY(imgImageView.getScaleY() * zoomFactor);
+                        String scaleReport = String.format("ImageView scale factors [%.3f, %.3f]", imgImageView.getScaleX(), imgImageView.getScaleY());
 
-                        setStatus(String.format("ImageView scale factors [%.3f, %.3f]", imgImageView.getScaleX(), imgImageView.getScaleY()));
+                        setStatus( scaleReport );
+                        printSysOut( scaleReport );
 
-                    /*
-                        see if we can set the scroll page to fit the new size of the image
-                     */
+                        /*
+                            see if we can set the scroll page to fit the new size of the image
+                         */
                         double dScaleX = imgImageView.getScaleX();
                         double dScaleY = imgImageView.getScaleY();
                         double dWidth = imgImageView.getFitWidth() * dScaleX;
                         double dHeight = imgImageView.getFitHeight() * dScaleY;
-
-
-                        //spScrollPane.setMaxWidth ( dWidth );
-                        //spScrollPane.setMaxHeight( dHeight );
-                        spScrollPane.setHmax(dWidth);
-                        spScrollPane.setHmin(0.0);
-                        spScrollPane.setVmax(dHeight);
-                        spScrollPane.setVmin(0.0);
-                        printSysOut(String.format("ScrollEvent - [%.0f, %.0f]", dWidth, dHeight));
+                        /*
+                            Remove this. It makes no difference
+                         */
+                        if ( false ) {
+                            spScrollPane.setMaxWidth(dWidth * 3.0);
+                            spScrollPane.setMaxHeight(dHeight * 3.0);
+                            spScrollPane.setHmax(dWidth * 3.0);
+                            spScrollPane.setHmin(-dWidth * 3.0);
+                            spScrollPane.setVmax(dHeight * 3.0);
+                            spScrollPane.setVmin(-dHeight * 3.0);
+                            spScrollPane.setContent(imgImageView);
+                        }
+                        printSysOut(String.format("ScrollEvent imgImageView size- [%.0f, %.0f]", dWidth, dHeight));
                         event.consume();
                     }
                 }
