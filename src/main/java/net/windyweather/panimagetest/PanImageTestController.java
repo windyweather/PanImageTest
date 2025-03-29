@@ -53,14 +53,15 @@ public class PanImageTestController {
         /*
             The setFit makes no difference either way
          */
-        /*
-        spScrollPane.setFitToHeight( true);
-        spScrollPane.setFitToWidth(true);
-        */
+        if (false) {
+            /*
+            spScrollPane.setFitToHeight( true);
+            spScrollPane.setFitToWidth(true);
+            */
 
-        spScrollPane.setFitToHeight( false);
-        spScrollPane.setFitToWidth(false);
-
+            spScrollPane.setFitToHeight(false);
+            spScrollPane.setFitToWidth(false);
+        }
         /*
             Now make image zoomable with a SetOnScroll event handler
             Major big deal!! This routine and the handler make ZOOM of
@@ -119,6 +120,14 @@ public class PanImageTestController {
                             spScrollPane.setVmin(-dHeight * 3.0);
                             spScrollPane.setContent(imgImageView);
                         }
+
+                        /*
+                            Does this do anything? Not a thing.
+                         */
+                        if ( false ) {
+                            spScrollPane.setContent(imgImageView);
+                        }
+
                         printSysOut(String.format("ScrollEvent imgImageView size- [%.0f, %.0f]", dWidth, dHeight));
                         event.consume();
                     }
@@ -159,7 +168,7 @@ public class PanImageTestController {
                  */
                 setStatus("Bogus starting file path for fileChooser");
                 /*
-                    Go back around with a null path and let the
+                    Go back around with a default path and let the
                     user find an image.
                  */
                 File aFile = new File("C:\\");
