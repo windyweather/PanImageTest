@@ -10,29 +10,33 @@
 <?import javafx.scene.layout.VBox?>
 
 
-<SplitPane dividerPositions="0.6511879049676026" orientation="VERTICAL" prefHeight="372.0" prefWidth="548.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.windyweather.panimagetest.PanImageTestController">
-   <items>
-      <ScrollPane fx:id="spScrollPane" prefHeight="200.0" prefWidth="200.0">
-         <content>
-            <ImageView fx:id="imgImageView" pickOnBounds="true" preserveRatio="true" />
-         </content>
-      </ScrollPane>
-      <VBox alignment="CENTER" spacing="20.0">
-          <padding>
-              <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-          </padding>
-      
-          <Label fx:id="lblStatus" />
-         <HBox alignment="TOP_CENTER">
-            <children>
-                <Button fx:id="btnHello" onAction="#onHelloButtonClick" text="Hello!" />
-               <Button fx:id="btnOpenImage" layoutX="10.0" layoutY="10.0" onAction="#onOpenImageClick" text="Open Image...">
-                  <HBox.margin>
-                     <Insets left="40.0" />
-                  </HBox.margin>
-               </Button>
-            </children>
-         </HBox>
+<SplitPane minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="653.0" prefWidth="894.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.windyweather.panimagetest.PanImageTestController">
+  <items>
+      <VBox prefHeight="490.0" prefWidth="738.0">
+         <children>
+            <ScrollPane fx:id="spScrollPane" centerShape="false" hmax="800000.0" minHeight="-Infinity" minWidth="-Infinity" pannable="true" prefHeight="200.0" prefWidth="200.0" scaleShape="false" vmax="800000.0" VBox.vgrow="ALWAYS">
+               <content>
+                  <ImageView fx:id="imgImageView" focusTraversable="true" pickOnBounds="true" preserveRatio="true" />
+               </content>
+            </ScrollPane>
+            <VBox alignment="CENTER" prefHeight="10.0" prefWidth="10.0" spacing="20.0" VBox.vgrow="NEVER">
+                <padding>
+                    <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                </padding>
+            
+                                                                <Label fx:id="lblStatus" />
+               <HBox alignment="TOP_CENTER" prefHeight="10.0">
+                  <children>
+                      <Button fx:id="btnHello" onAction="#onHelloButtonClick" text="Hello!" />
+                     <Button fx:id="btnOpenImage" layoutX="10.0" layoutY="10.0" onAction="#onOpenImageClick" text="Open Image...">
+                        <HBox.margin>
+                           <Insets left="40.0" />
+                        </HBox.margin>
+                     </Button>
+                  </children>
+               </HBox>
+            </VBox>
+         </children>
       </VBox>
-   </items>
+  </items>
 </SplitPane>
