@@ -146,22 +146,33 @@ public class PanImageTestController {
         fileChooser.setInitialDirectory(defFile);
         Stage stage = (Stage) btnOpenImage.getScene().getWindow();
         File selectedImageFile = null;
-        try {
-            selectedImageFile = fileChooser.showOpenDialog(stage);
-        }
-        catch (Exception e)
-        {
-            /*
-             We can ignore the exception and just continue because
-             we initialized selectedImageFile with null
-             */
-            setStatus("Bogus starting file path for fileChooser");
-            return;
-        }
-        if (selectedImageFile == null )
-        {
-            setStatus("No Image Chosen");
-            return;
+        /*
+            Keep trying until cancel or we get a path
+         */
+        while (true) {
+            try {
+                selectedImageFile = fileChooser.showOpenDialog(stage);
+            } catch (Exception e) {
+                /*
+                 We can ignore the exception and just continue because
+                 we initialized selectedImageFile with null
+                 */
+                setStatus("Bogus starting file path for fileChooser");
+                /*
+                    Go back around with a null path and let the
+                    user find an image.
+                 */
+                File aFile = new File("C:\\");
+                fileChooser.setInitialDirectory(aFile);
+
+                continue;
+            }
+            if (selectedImageFile == null) {
+                setStatus("No Image Chosen");
+                return;
+            } else {
+                break;
+            }
         }
         /*
             reset scale factors in case we were messing with them
