@@ -8,6 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
@@ -46,9 +47,9 @@ public class PanImageTestController {
         /*
             Make things pannable with the mouse
          */
-        spScrollPane.setPannable( true );
-        spScrollPane.setHbarPolicy( AS_NEEDED );
-        spScrollPane.setVbarPolicy( AS_NEEDED );
+        spScrollPane.setPannable(true);
+        spScrollPane.setHbarPolicy(AS_NEEDED);
+        spScrollPane.setVbarPolicy(AS_NEEDED);
 
         /*
             The setFit makes no difference either way
@@ -98,8 +99,8 @@ public class PanImageTestController {
                         imgImageView.setScaleY(imgImageView.getScaleY() * zoomFactor);
                         String scaleReport = String.format("ImageView scale factors [%.3f, %.3f]", imgImageView.getScaleX(), imgImageView.getScaleY());
 
-                        setStatus( scaleReport );
-                        printSysOut( scaleReport );
+                        setStatus(scaleReport);
+                        printSysOut(scaleReport);
 
                         /*
                             see if we can set the scroll page to fit the new size of the image
@@ -111,7 +112,7 @@ public class PanImageTestController {
                         /*
                             Remove this. It makes no difference
                          */
-                        if ( false ) {
+                        if (false) {
                             spScrollPane.setMaxWidth(dWidth * 3.0);
                             spScrollPane.setMaxHeight(dHeight * 3.0);
                             spScrollPane.setHmax(dWidth * 3.0);
@@ -124,17 +125,51 @@ public class PanImageTestController {
                         /*
                             Does this do anything? Not a thing.
                          */
-                        if ( false ) {
+                        if (false) {
                             spScrollPane.setContent(imgImageView);
                         }
+                        /*
+                            The below has absolutely no effect on scrolling behaviour and
+                            the spScrollPane H and V values stay at 0.5
+                         */
+                        if (false) {
+                        /*
+                            What are teh scroll pane Hvalue and Vvalue anyway?
+                            Let's set them and see if it partially works
+                            ScrollBar range is always from 0.0 -> 1.0? Who Knew?
+                         */
+                            spScrollPane.setHvalue(0.5);
+                            spScrollPane.setVvalue(0.5);
+                        }
+                        printSysOut(String.format("IMG ScrollEvent imgImageView size- [%.0f, %.0f]", dWidth, dHeight));
+                        printSysOut(String.format("IMG ScrollEvent spScrollPane H V Values [%.2f, %.2f]",
+                                spScrollPane.getHvalue(), spScrollPane.getVvalue()));
+                        printSysOut(String.format("IMG ScrollEvent imgImageView X,Y Values [%.2f, %.2f]",
+                                imgImageView.getX(), imgImageView.getY()));
 
-                        printSysOut(String.format("ScrollEvent imgImageView size- [%.0f, %.0f]", dWidth, dHeight));
                         event.consume();
                     }
                 }
         );
 
+        /*
+            Let's try a scroll event on the page now and see what we find.
+            Let's see if this is called when we pan.
+            ****** THIS IS NEVER CALLED **** no clue why
+         */
 
+        spScrollPane.setOnScroll(
+                new EventHandler<ScrollEvent>() {
+                    @Override
+                    public void handle(ScrollEvent scrollEvent) {
+                        //printSysOut(String.format("IMG ScrollEvent imgImageView size- [%.0f, %.0f]", dWidth, dHeight));
+                        printSysOut(String.format("SP ScrollEvent spScrollPane H V Values [%.2f, %.2f]",
+                                spScrollPane.getHvalue(), spScrollPane.getVvalue()));
+                        printSysOut(String.format("SP ScrollEvent imgImageView X,Y Values [%.2f, %.2f]",
+                                imgImageView.getX(), imgImageView.getY()));
+                    }
+                }
+        );
     }
 
     @FXML
@@ -203,5 +238,39 @@ public class PanImageTestController {
         imgImageView.setFitHeight( dHeight );
         imgImageView.setImage( anImage );
         setStatus(String.format("image displayed [%.0f, %.0f]", dWidth, dHeight));
+    }
+
+    /*
+        Let's hook some events in the Scene Builder and see if they are called on Pan
+        ** THESE ARE NEVER CALLED **
+     */
+    public void SPOnMouseDragged(MouseEvent mouseEvent) {
+        printSysOut(String.format(" SpOnMouseDragged spScrollPane H V Values [%.2f, %.2f]",
+                spScrollPane.getHvalue(), spScrollPane.getVvalue()));
+        printSysOut(String.format("SpOnMouseDragged ScrollEvent imgImageView X,Y Values [%.2f, %.2f]",
+                imgImageView.getX(), imgImageView.getY()));
+    }
+
+    public void SPOnScroll(ScrollEvent scrollEvent) {
+        printSysOut(String.format("SPOnScroll spScrollPane H V Values [%.2f, %.2f]",
+                spScrollPane.getHvalue(), spScrollPane.getVvalue()));
+        printSysOut(String.format("SPOnScroll imgImageView X,Y Values [%.2f, %.2f]",
+                imgImageView.getX(), imgImageView.getY()));
+    }
+
+    /*
+        Hurray. The following two are called on a drag.
+        Clicked before and after the drag.
+        And drag over and over during the drag.
+     */
+
+    public void ImgOnMouseClicked(MouseEvent mouseEvent) {
+        printSysOut(String.format("ImgOnMouseClicked imgImageView X,Y Values [%.2f, %.2f]",
+                imgImageView.getX(), imgImageView.getY()));
+    }
+
+    public void ImgOnMouseDragged(MouseEvent mouseEvent) {
+        printSysOut(String.format("ImgOnMouseDragged imgImageView X,Y Values [%.2f, %.2f]",
+                imgImageView.getX(), imgImageView.getY()));
     }
 }
