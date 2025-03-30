@@ -3,6 +3,7 @@ package net.windyweather.panimagetest;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -29,6 +30,14 @@ public class PanImageTestController {
     public Button btnOpenImage;
     public AnchorPane apAnchorPane;
 
+    public Image anImage;
+
+    static double dScaleFactor;
+
+    static {
+        dScaleFactor = 1.0;
+    }
+
     @FXML
 
     protected void setStatus( String sts ) {
@@ -54,14 +63,9 @@ public class PanImageTestController {
         /*
             The setFit makes no difference either way
          */
-        if (false) {
-            /*
+        if (true) {
             spScrollPane.setFitToHeight( true);
             spScrollPane.setFitToWidth(true);
-            */
-
-            spScrollPane.setFitToHeight(false);
-            spScrollPane.setFitToWidth(false);
         }
         /*
             Now make image zoomable with a SetOnScroll event handler
@@ -95,9 +99,20 @@ public class PanImageTestController {
                         if (deltaY < 0) {
                             zoomFactor = 0.95;
                         }
+                        /*
+                            Save the scale factor for later to set the fitwidth
+                         */
+                        dScaleFactor = imgImageView.getScaleX() * zoomFactor;
+                        double dOriginalWidth = imgImageView.getFitWidth();
+                        /*
+                            Save these values to put back the postion after the zoom
+                         */
+                        double dSpVvalue = spScrollPane.getVvalue();
+                        double dSpHValue = spScrollPane.getHvalue();
+
                         imgImageView.setScaleX(imgImageView.getScaleX() * zoomFactor);
                         imgImageView.setScaleY(imgImageView.getScaleY() * zoomFactor);
-                        String scaleReport = String.format("ImageView scale factors [%.3f, %.3f]", imgImageView.getScaleX(), imgImageView.getScaleY());
+                        String scaleReport = String.format("SetOnScroll - ImageView scale factors [%.3f, %.3f]", imgImageView.getScaleX(), imgImageView.getScaleY());
 
                         setStatus(scaleReport);
                         printSysOut(scaleReport);
@@ -141,11 +156,46 @@ public class PanImageTestController {
                             spScrollPane.setHvalue(0.5);
                             spScrollPane.setVvalue(0.5);
                         }
-                        printSysOut(String.format("IMG ScrollEvent imgImageView size- [%.0f, %.0f]", dWidth, dHeight));
+                        /*
+                            The magic that fixes the pan problem?
+                         */
+                        double dScaledWidth = anImage.getWidth() * dScaleFactor;
+                        printSysOut(String.format("IMG ScrollEvent imgSetFitWidth width %.0f scale factor %.4f newWidth %.4f",
+                                anImage.getWidth(), dScaleFactor, dScaledWidth) );
+                        /*
+                            ***************** this is apparently what made ImagePanZoom test work  ****************
+                            * ********** but it's not working here *************
+                         */
+                        imgImageView.setFitWidth( anImage.getWidth() * dScaleFactor );
+                        imgImageView.setFitHeight( anImage.getHeight() * dScaleFactor );
+                        spScrollPane.setFitToHeight( true );
+                        spScrollPane.setFitToWidth( true );
+
+
+                        printSysOut(String.format("IMG ScrollEvent imgImageView Scaled w,h [%.0f, %.0f]", dWidth, dHeight));
                         printSysOut(String.format("IMG ScrollEvent spScrollPane H V Values [%.2f, %.2f]",
                                 spScrollPane.getHvalue(), spScrollPane.getVvalue()));
                         printSysOut(String.format("IMG ScrollEvent imgImageView X,Y Values [%.2f, %.2f]",
                                 imgImageView.getX(), imgImageView.getY()));
+                        Bounds bnds = imgImageView.getBoundsInLocal();
+                        printSysOut(String.format("IMG ScrollEvent ImageView bounds [%.0f, %.0f]",
+                                bnds.getWidth(), bnds.getHeight() ));
+
+                        /*
+                            Let's change scrollpane Hmin/max and Vmin/max
+                            Whateven are they supposed to be. What's the model?
+                            if image inside of scrollpane is 0-n, then to scroll to see the whole
+                            image, the range needs to be larger than 0-n or exactly 0-n
+                         */
+                        double dImgViewWidth = imgImageView.getFitWidth() * 10.0;
+                        double dImgViewHeight = imgImageView.getFitHeight() * 10.0;
+                        spScrollPane.setHmin( 0.0 ); //- dImgViewWidth);
+                        spScrollPane.setHmax( dImgViewWidth );
+                        spScrollPane.setVmin( 0.0 ); //-dImgViewHeight);
+                        spScrollPane.setVmax( dImgViewHeight );
+
+                        printSysOut(String.format("IMG ScrollEvent ImageView w,h [%.0f, %.0f]", dImgViewWidth, dImgViewHeight));
+
 
                         event.consume();
                     }
@@ -230,7 +280,7 @@ public class PanImageTestController {
          */
         InputStream imageAsStream = new FileInputStream(selectedImageFile);
 
-        Image anImage = new Image( imageAsStream );
+        anImage  = new Image( imageAsStream );
         double dWidth = anImage.getWidth();
         double dHeight = anImage.getHeight();
 
@@ -249,15 +299,8 @@ public class PanImageTestController {
                 spScrollPane.getHvalue(), spScrollPane.getVvalue()));
         printSysOut(String.format("SpOnMouseDragged ScrollEvent imgImageView X,Y Values [%.2f, %.2f]",
                 imgImageView.getX(), imgImageView.getY()));
-    }
 
-    public void SPOnScroll(ScrollEvent scrollEvent) {
-        printSysOut(String.format("SPOnScroll spScrollPane H V Values [%.2f, %.2f]",
-                spScrollPane.getHvalue(), spScrollPane.getVvalue()));
-        printSysOut(String.format("SPOnScroll imgImageView X,Y Values [%.2f, %.2f]",
-                imgImageView.getX(), imgImageView.getY()));
     }
-
     /*
         Hurray. The following two are called on a drag.
         Clicked before and after the drag.
@@ -265,11 +308,59 @@ public class PanImageTestController {
      */
 
     public void ImgOnMouseClicked(MouseEvent mouseEvent) {
-        printSysOut(String.format("ImgOnMouseClicked imgImageView X,Y Values [%.2f, %.2f]",
-                imgImageView.getX(), imgImageView.getY()));
+        /*
+            Let's try something. Do the setFitWidth here.
+            Drags start with a click so we make sure the FitWidth is set
+            before we start dragging and use the last Scalefactor that
+            we saw on the last zoom
+         */
+        imgImageView.setFitWidth( anImage.getWidth() * dScaleFactor );
+        printSysOut(String.format("ImgOnMouseClicked imgImageView X,Y Values [%.2f, %.2f] zoom %.4f",
+                imgImageView.getX(), imgImageView.getY(), dScaleFactor));
+        Bounds bnds = imgImageView.getBoundsInLocal();
+        printSysOut(String.format("ImgOnMouseClicked ImageView bounds [%.0f, %.0f]",
+                bnds.getWidth(), bnds.getHeight() ));
     }
 
+    /*
+        This is called on dragging image
+     */
     public void ImgOnMouseDragged(MouseEvent mouseEvent) {
+
+        /*
+            Do we need this here?
+            Nope. This screws up panning
+         */
+            //imgImageView.setFitWidth( anImage.getWidth() );
+
+        /*
+            Dump stuff out to watch it
+         */
+            double dSpH = spScrollPane.getHeight();
+            double dSpW = spScrollPane.getWidth();
+            double dSpHvalue = spScrollPane.getHvalue();
+            double dSpVvalue = spScrollPane.getVvalue();
+            double dSpHmin = spScrollPane.getHmin();
+            double dSpHmax = spScrollPane.getHmax();
+
+            printSysOut(String.format("ImgOnMouseDragged ScrollPane w,h [%.0f, %.0f] hmin, hmax [%.0f, %.0f] hval,vval [%.0f, %.0f]",
+                    dSpH, dSpW, dSpHmin, dSpHmax, dSpHvalue, dSpVvalue
+            ));
+            printSysOut(String.format("ImgOnMouseDragged ImageView view XY [%.0f, %.0f] fitWH [%.0f, %.0f]",
+                    imgImageView.getX(), imgImageView.getY(), imgImageView.getFitWidth(), imgImageView.getFitHeight()));
+            printSysOut(String.format("ImgOnMouseDragged spScrollPane H V [%.2f, %.2f] X,Y [%.2f, %.2f]",
+                    spScrollPane.getHvalue(), spScrollPane.getVvalue(),imgImageView.getX(), imgImageView.getY() ));
+
+        // don't do this, it breaks it
+        //mouseEvent.consume();
+        }
+
+        public void SPOnScroll(ScrollEvent scrollEvent) {
+            printSysOut(String.format("SPOnScroll spScrollPane H V Values [%.2f, %.2f]",
+                    spScrollPane.getHvalue(), spScrollPane.getVvalue()));
+            printSysOut(String.format("SPOnScroll imgImageView X,Y Values [%.2f, %.2f]",
+                    imgImageView.getX(), imgImageView.getY()));
+
         printSysOut(String.format("ImgOnMouseDragged imgImageView X,Y Values [%.2f, %.2f]",
                 imgImageView.getX(), imgImageView.getY()));
     }
