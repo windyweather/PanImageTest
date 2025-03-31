@@ -4,6 +4,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -38,6 +39,19 @@ public class PanImageTestController {
         dScaleFactor = 1.0;
     }
 
+    /*
+        Center a child in the parent, if the parent contains the child
+     */
+    private void centerNode(Node parentNode, Node childNode ) {
+        Bounds parentBounds = parentNode.getBoundsInLocal();
+        Bounds childBounds = childNode.getLayoutBounds();
+        if ( parentBounds.contains( childBounds) ) {
+            printSysOut( String.format("centerNode - node centered [%.0f, %.0f]",
+                    childNode.getTranslateX(), childNode.getTranslateY() ) );
+            childNode.setTranslateX( (parentBounds.getWidth() / 2.0) - (childBounds.getWidth() / 2.0 ) );
+            childNode.setTranslateY( (parentBounds.getHeight() / 2.0) - (childBounds.getHeight() / 2.0 ) );
+        }
+    }
     @FXML
 
     protected void setStatus( String sts ) {
@@ -110,8 +124,8 @@ public class PanImageTestController {
                         double dSpVvalue = spScrollPane.getVvalue();
                         double dSpHValue = spScrollPane.getHvalue();
 
-                        imgImageView.setScaleX(imgImageView.getScaleX() * zoomFactor);
-                        imgImageView.setScaleY(imgImageView.getScaleY() * zoomFactor);
+                        imgImageView.setScaleX( dScaleFactor);
+                        imgImageView.setScaleY( dScaleFactor);
                         String scaleReport = String.format("SetOnScroll - ImageView scale factors [%.3f, %.3f]", imgImageView.getScaleX(), imgImageView.getScaleY());
 
                         setStatus(scaleReport);
@@ -122,27 +136,19 @@ public class PanImageTestController {
                          */
                         double dScaleX = imgImageView.getScaleX();
                         double dScaleY = imgImageView.getScaleY();
-                        double dWidth = imgImageView.getFitWidth() * dScaleX;
-                        double dHeight = imgImageView.getFitHeight() * dScaleY;
+                        double dWidth = imgImageView.getFitWidth();
+                        double dHeight = imgImageView.getFitHeight();
                         /*
-                            Remove this. It makes no difference
+                            Center the image in the ScrollPane if the image is
+                            smaller than the ScrollPane
                          */
-                        if (false) {
-                            spScrollPane.setMaxWidth(dWidth * 3.0);
-                            spScrollPane.setMaxHeight(dHeight * 3.0);
-                            spScrollPane.setHmax(dWidth * 3.0);
-                            spScrollPane.setHmin(-dWidth * 3.0);
-                            spScrollPane.setVmax(dHeight * 3.0);
-                            spScrollPane.setVmin(-dHeight * 3.0);
-                            spScrollPane.setContent(imgImageView);
-                        }
+                        centerNode( spScrollPane, imgImageView );
 
-                        /*
-                            Does this do anything? Not a thing.
-                         */
-                        if (false) {
-                            spScrollPane.setContent(imgImageView);
-                        }
+                        spScrollPane.setHmax(dWidth * 5.0);
+                        spScrollPane.setHmin(0.0);
+                        spScrollPane.setVmax(dHeight * 5.0);
+                        spScrollPane.setVmin(0.0);
+
                         /*
                             The below has absolutely no effect on scrolling behaviour and
                             the spScrollPane H and V values stay at 0.5
@@ -166,8 +172,8 @@ public class PanImageTestController {
                             ***************** this is apparently what made ImagePanZoom test work  ****************
                             * ********** but it's not working here *************
                          */
-                        imgImageView.setFitWidth( anImage.getWidth() * dScaleFactor );
-                        imgImageView.setFitHeight( anImage.getHeight() * dScaleFactor );
+                        imgImageView.setFitWidth( anImage.getWidth() ); // we already did this above* dScaleFactor );
+                        imgImageView.setFitHeight( anImage.getHeight() ); // we already did this above * dScaleFactor );
                         spScrollPane.setFitToHeight( true );
                         spScrollPane.setFitToWidth( true );
 
@@ -343,7 +349,7 @@ public class PanImageTestController {
             double dSpHmin = spScrollPane.getHmin();
             double dSpHmax = spScrollPane.getHmax();
 
-            printSysOut(String.format("ImgOnMouseDragged ScrollPane w,h [%.0f, %.0f] hmin, hmax [%.0f, %.0f] hval,vval [%.0f, %.0f]",
+            printSysOut(String.format("ImgOnMouseDragged ScrollPane w,h [%.0f, %.0f] hmin,max [%.0f, %.0f] h,v val [%.0f, %.0f]",
                     dSpH, dSpW, dSpHmin, dSpHmax, dSpHvalue, dSpVvalue
             ));
             printSysOut(String.format("ImgOnMouseDragged ImageView view XY [%.0f, %.0f] fitWH [%.0f, %.0f]",
