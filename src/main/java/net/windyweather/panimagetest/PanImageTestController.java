@@ -87,6 +87,8 @@ public class PanImageTestController {
             an image work just great. I added the feature to stop zooming
             at 200% and 10%. when the getscale returns either of those,
             just consume the event.
+            *** Let's try to zoom on the scroll pane rather than the imageview ***
+            *** Well that doesn't work. It scrolls rather than zooming ***
          */
 
         imgImageView.setOnScroll(
