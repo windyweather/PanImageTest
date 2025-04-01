@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import static javafx.scene.control.ScrollPane.ScrollBarPolicy.AS_NEEDED;
+import static javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER;
 
 public class PanImageTestController {
     public ScrollPane spScrollPane;
@@ -71,54 +72,63 @@ public class PanImageTestController {
         /*
             Very confusing. Horizontal vs Width  Vertical vs Height
          */
-        double imgH = imgImageView.getFitWidth(); // horizontal
-        double imgV = imgImageView.getFitHeight(); // vertical
+        double imgH = imgImageView.getFitWidth()*imgImageView.getScaleX(); // horizontal
+        double imgV = imgImageView.getFitHeight()*imgImageView.getScaleY(); // vertical
         double spH = spScrollPane.getViewportBounds().getWidth();
         double spV = spScrollPane.getViewportBounds().getHeight();
 
+        double dHfraction = (spScrollPane.getHvalue() - spScrollPane.getHmin() ) / (spScrollPane.getHmax() - spScrollPane.getHmin());
+        double dVfraction = (spScrollPane.getVvalue() - spScrollPane.getVmin() ) / (spScrollPane.getVmax() - spScrollPane.getVmin());
+
         double dSpinAdjust = spinScrollPaneAdjust.getValue();
         printSysOut(String.format("AdjustScrollPane - adjust value %.0f", dSpinAdjust));
+        printSysOut(String.format("AdjustScrollPane - ImageView width %.0f ScrollPane width %.0f",
+                imgH, spH) );
         /*
             Horizontal stuff
          */
         if ( imgH < spH ) {
             spScrollPane.setHmax( 1.0);
-            spScrollPane.setHvalue(0.0);
+            spScrollPane.setHvalue(0.5);
             spScrollPane.setHmin( 0.0);
-            x = 0.0;
-            y = 0.0;
-            spScrollPane.setHvalue(x);
-            spScrollPane.setVvalue(y);
+
             printSysOut("AdjustScrollPane - center image horizontally");
         } else {
-            spScrollPane.setHmax( imgH * dSpinAdjust );
-            spScrollPane.setHmin( - imgH );
-            printSysOut(String.format("AdjustScrollPane - ImageView width %.0f ScrollPane Hrange %.0f",
-                    imgH, imgH*dSpinAdjust) );
+            /*
+                Put the Hvalue back at same fraction of new range
+             */
+            double dHhigh = imgH * dSpinAdjust;
+            double dHlow = -imgH;
+            double dHpos = (dHhigh - dHlow) * dHfraction;
+            spScrollPane.setHmax( dHhigh );
+            spScrollPane.setHmin( dHlow );
+            spScrollPane.setHvalue( dHpos );
+            printSysOut(String.format("AdjustScrollPane - ImageView width %.0f ScrollPane Hrange %.0f Hpos %.0f",
+                    imgH, dHhigh-dHlow, dHpos ));
         }
         /*
             Vertical Stuff
          */
         if ( imgV < spV ) {
             spScrollPane.setVmax( 1.0);
-            spScrollPane.setVvalue(0.0);
+            spScrollPane.setVvalue(0.5);
             spScrollPane.setVmin( 0.0);
-            x = 0.0;
-            y = 0.0;
-            spScrollPane.setHvalue(x);
-            spScrollPane.setVvalue(y);
+
             printSysOut("AdjustScrollPane - center image vertically");
         } else {
-            spScrollPane.setVmax( imgV * dSpinAdjust);
-            spScrollPane.setVmin( - imgV );
-            printSysOut(String.format("AdjustScrollPane - ImagePane Height %.0f ScrollPane Vrange %.0f",
-                    imgV, imgV * dSpinAdjust) );
-        }
 
-        /*
-        spScrollPane.setVvalue( );
-        spScrollPane.setHvalue( )
-        */
+            /*
+                Put the Vvalue back at same fraction of new range
+             */
+            double dVhigh = imgV * dSpinAdjust;
+            double dVlow = -imgV;
+            double dVpos = (dVhigh - dVlow) * dVfraction;
+            spScrollPane.setVmax( dVhigh );
+            spScrollPane.setVmin( dVlow );
+            spScrollPane.setVvalue( dVpos );
+            printSysOut(String.format("AdjustScrollPane - ImageView height %.0f ScrollPane Vrange %.0f VPos %.0f",
+                    imgV, dVhigh-dVlow, dVpos ));
+        }
 
     }
 
@@ -316,11 +326,13 @@ public class PanImageTestController {
      */
     public void SPOnMouseDragged(MouseEvent mouseEvent) {
 
+        if ( false ) {
 
-        printSysOut(String.format(" SpOnMouseDragged spScrollPane H V Values [%.2f, %.2f]",
-                spScrollPane.getHvalue(), spScrollPane.getVvalue()));
-        printSysOut(String.format("SpOnMouseDragged ScrollEvent imgImageView X,Y Values [%.2f, %.2f]",
-                imgImageView.getX(), imgImageView.getY()));
+            printSysOut(String.format(" SpOnMouseDragged spScrollPane H V Values [%.2f, %.2f]",
+                    spScrollPane.getHvalue(), spScrollPane.getVvalue()));
+            printSysOut(String.format("SpOnMouseDragged ScrollEvent imgImageView X,Y Values [%.2f, %.2f]",
+                    imgImageView.getX(), imgImageView.getY()));
+        }
 
     }
     /*
@@ -336,12 +348,14 @@ public class PanImageTestController {
             before we start dragging and use the last Scalefactor that
             we saw on the last zoom
          */
-        //imgImageView.setFitWidth( anImage.getWidth() * dScaleFactor );
-        printSysOut(String.format("ImgOnMouseClicked imgImageView X,Y Values [%.2f, %.2f] zoom %.4f",
-                imgImageView.getX(), imgImageView.getY(), dScaleFactor));
-        Bounds bnds = imgImageView.getBoundsInLocal();
-        printSysOut(String.format("ImgOnMouseClicked ImageView bounds [%.0f, %.0f]",
-                bnds.getWidth(), bnds.getHeight() ));
+        if (false) {
+            //imgImageView.setFitWidth( anImage.getWidth() * dScaleFactor );
+            printSysOut(String.format("ImgOnMouseClicked imgImageView X,Y Values [%.2f, %.2f] zoom %.4f",
+                    imgImageView.getX(), imgImageView.getY(), dScaleFactor));
+            Bounds bnds = imgImageView.getBoundsInLocal();
+            printSysOut(String.format("ImgOnMouseClicked ImageView bounds [%.0f, %.0f]",
+                    bnds.getWidth(), bnds.getHeight()));
+        }
     }
 
     /*
@@ -351,14 +365,15 @@ public class PanImageTestController {
 
         /*
             Do we need this here?
-            Nope. This screws up panning
+            Nope. makes no difference
          */
-            //imgImageView.setFitWidth( anImage.getWidth() );
+        imgImageView.setFitWidth( anImage.getWidth() );
 
         /*
             Adjust the scroll pane stuff with insane values
+            NOT needed
          */
-        AdjustScrollPane();
+        //AdjustScrollPane();
 
         /*
             Dump stuff out to watch it
@@ -373,29 +388,42 @@ public class PanImageTestController {
         printSysOut(String.format("ImgOnMouseDragged ScrollPane w,h [%.0f, %.0f] hmin,max [%.0f, %.0f] h,v val [%.0f, %.0f]",
                 dSpH, dSpW, dSpHmin, dSpHmax, dSpHvalue, dSpVvalue
         ));
-        printSysOut(String.format("ImgOnMouseDragged ImageView view XY [%.0f, %.0f] fitWH [%.0f, %.0f]",
-                imgImageView.getX(), imgImageView.getY(), imgImageView.getFitWidth(), imgImageView.getFitHeight()));
-        printSysOut(String.format("ImgOnMouseDragged spScrollPane H V [%.2f, %.2f] imgView X,Y [%.2f, %.2f]",
-                spScrollPane.getHvalue(), spScrollPane.getVvalue(),imgImageView.getX(), imgImageView.getY() ));
+        /*
+            Can we brute force the fix?
+         */
+        if ( dSpHvalue == dSpHmax ) {
+            spScrollPane.setHmax( dSpHmax + 1000.0);
+            printSysOut(String.format("ImgOnMouseDragged Hmax adjusted to %.0f", dSpHmax+1000) );
+        }
+        if ( dSpHvalue == dSpHmin ) {
+            spScrollPane.setHmin( dSpHmin - 1000.0 );
+            printSysOut(String.format("ImgOnMouseDragged Hmin adjusted to %.0f", dSpHmin-1000) );
+        }
+
+        if ( false ) {
+            printSysOut(String.format("ImgOnMouseDragged ImageView view XY [%.0f, %.0f] fitWH [%.0f, %.0f]",
+                    imgImageView.getX(), imgImageView.getY(), imgImageView.getFitWidth(), imgImageView.getFitHeight()));
+            printSysOut(String.format("ImgOnMouseDragged spScrollPane H V [%.2f, %.2f] imgView X,Y [%.2f, %.2f]",
+                    spScrollPane.getHvalue(), spScrollPane.getVvalue(), imgImageView.getX(), imgImageView.getY()));
 
         /*
             Move Hmin,Hmax to avoid bumping image
          */
-        printSysOut(String.format("ImgOnMouseDragged spScrollPane Hmin Hmax [%.2f, %.2f] X,Y [%.2f, %.2f]",
-                spScrollPane.getHmin(), spScrollPane.getHmax(),imgImageView.getX(), imgImageView.getY() ));
-
+            printSysOut(String.format("ImgOnMouseDragged spScrollPane Hmin Hmax [%.2f, %.2f] X,Y [%.2f, %.2f]",
+                    spScrollPane.getHmin(), spScrollPane.getHmax(), imgImageView.getX(), imgImageView.getY()));
+        }
         // don't do this, it breaks it
         //mouseEvent.consume();
         }
 
-        public void SPOnScroll(ScrollEvent scrollEvent) {
-            printSysOut(String.format("SPOnScroll spScrollPane H V Values [%.2f, %.2f]",
-                    spScrollPane.getHvalue(), spScrollPane.getVvalue()));
-            printSysOut(String.format("SPOnScroll imgImageView X,Y Values [%.2f, %.2f]",
-                    imgImageView.getX(), imgImageView.getY()));
+    public void SPOnScroll(ScrollEvent scrollEvent) {
+        printSysOut(String.format("SPOnScroll spScrollPane H V Values [%.2f, %.2f]",
+                spScrollPane.getHvalue(), spScrollPane.getVvalue()));
+        printSysOut(String.format("SPOnScroll imgImageView X,Y Values [%.2f, %.2f]",
+                imgImageView.getX(), imgImageView.getY()));
 
         printSysOut(String.format("ImgOnMouseDragged imgImageView X,Y Values [%.2f, %.2f]",
-                imgImageView.getX(), imgImageView.getY()));
+            imgImageView.getX(), imgImageView.getY()));
     }
 
     public void SpOnZoom(ZoomEvent zoomEvent) {

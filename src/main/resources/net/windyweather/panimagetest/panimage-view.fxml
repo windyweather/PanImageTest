@@ -28,7 +28,7 @@
                         <Insets right="20.0" />
                      </padding>
                   </Label>
-                  <ScrollBar fx:id="sbSlideToZoom" max="10.0" min="0.5" prefWidth="500.0" unitIncrement="0.1" value="1.0" />
+                  <ScrollBar fx:id="sbSlideToZoom" max="10.0" min="0.1" prefWidth="500.0" unitIncrement="0.1" value="1.0" />
                </children>
                <padding>
                   <Insets top="10.0" />
