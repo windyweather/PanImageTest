@@ -206,15 +206,145 @@ public class PanImageTestController {
         });
 
         /*
-            *************** Remove the Scroll Handler which was doing a zoom, **************
-            *************** in case it messes with the zoom via slider        **************
+            *************** Restore the Scroll Handler which does a zoom,        **************
+            *************** Removing this and using Slider Did not fix problem   **************
          */
+
+       /*
+            Now make image zoomable with a SetOnScroll event handler
+            Major big deal!! This routine and the handler make ZOOM of
+            an image work just great. I added the feature to stop zooming
+            at 200% and 10%. when the getscale returns either of those,
+            just consume the event.
+            *** Let's try to zoom on the scroll pane rather than the imageview ***
+            *** Well that doesn't work. It scrolls rather than zooming ***
+         */
+
+        imgImageView.setOnScroll(
+                new EventHandler<ScrollEvent>() {
+                    @Override
+                    public void handle(ScrollEvent event) {
+                        double zoomFactor = 1.05;
+                        double deltaY = event.getDeltaY();
+                    /*
+                        Don't zoom forever. Just ignore it after
+                        a while.
+                     */
+                        double dScale = imgImageView.getScaleX();
+                        if (deltaY > 0.0 && dScale > 10.0) {
+                            setStatus("Don't scale too big");
+                            event.consume();
+                            return;
+                        } else if (deltaY < 0.0 && dScale < 0.20) {
+                            setStatus("Don't scale too small");
+                            event.consume();
+                            return;
+                        }
+
+                        if (deltaY < 0) {
+                            zoomFactor = 0.95;
+                        }
+                        /*
+                            Save the scale factor for later to set the fitwidth
+                         */
+                        dScaleFactor = imgImageView.getScaleX() * zoomFactor;
+                        double dOriginalWidth = imgImageView.getFitWidth();
+                        /*
+                            Save these values to put back the postion after the zoom
+                         */
+                        double dSpVvalue = spScrollPane.getVvalue();
+                        double dSpHValue = spScrollPane.getHvalue();
+
+                        imgImageView.setScaleX( dScaleFactor);
+                        imgImageView.setScaleY( dScaleFactor);
+                        String scaleReport = String.format("SetOnScroll - ImageView scale factors [%.3f, %.3f]", imgImageView.getScaleX(), imgImageView.getScaleY());
+
+                        setStatus(scaleReport);
+                        printSysOut(scaleReport);
+
+                        /*
+                            see if we can set the scroll page to fit the new size of the image
+                         */
+                        double dScaleX = imgImageView.getScaleX();
+                        double dScaleY = imgImageView.getScaleY();
+                        double dWidth = imgImageView.getFitWidth();
+                        double dHeight = imgImageView.getFitHeight();
+                        /*
+                            Center the image in the ScrollPane if the image is
+                            smaller than the ScrollPane
+                         */
+                        centerNode( spScrollPane, imgImageView );
+
+                        spScrollPane.setHmax(dWidth * 5.0);
+                        spScrollPane.setHmin(0.0);
+                        spScrollPane.setVmax(dHeight * 5.0);
+                        spScrollPane.setVmin(0.0);
+
+                        /*
+                            The below has absolutely no effect on scrolling behaviour and
+                            the spScrollPane H and V values stay at 0.5
+                         */
+                        if (false) {
+                        /*
+                            What are teh scroll pane Hvalue and Vvalue anyway?
+                            Let's set them and see if it partially works
+                            ScrollBar range is always from 0.0 -> 1.0? Who Knew?
+                         */
+                            spScrollPane.setHvalue(0.5);
+                            spScrollPane.setVvalue(0.5);
+                        }
+                        /*
+                            The magic that fixes the pan problem?
+                         */
+                        double dScaledWidth = anImage.getWidth() * dScaleFactor;
+                        printSysOut(String.format("IMG ScrollEvent imgSetFitWidth width %.0f scale factor %.4f newWidth %.4f",
+                                anImage.getWidth(), dScaleFactor, dScaledWidth) );
+                        /*
+                            ***************** this is apparently what made ImagePanZoom test work  ****************
+                            * ********** but it's not working here *************
+                         */
+                        imgImageView.setFitWidth( anImage.getWidth() ); // we already did this above* dScaleFactor );
+                        imgImageView.setFitHeight( anImage.getHeight() ); // we already did this above * dScaleFactor );
+                        spScrollPane.setFitToHeight( true );
+                        spScrollPane.setFitToWidth( true );
+
+
+                        printSysOut(String.format("IMG ScrollEvent imgImageView Scaled w,h [%.0f, %.0f]", dWidth, dHeight));
+                        printSysOut(String.format("IMG ScrollEvent spScrollPane H V Values [%.2f, %.2f]",
+                                spScrollPane.getHvalue(), spScrollPane.getVvalue()));
+                        printSysOut(String.format("IMG ScrollEvent imgImageView X,Y Values [%.2f, %.2f]",
+                                imgImageView.getX(), imgImageView.getY()));
+                        Bounds bnds = imgImageView.getBoundsInLocal();
+                        printSysOut(String.format("IMG ScrollEvent ImageView bounds [%.0f, %.0f]",
+                                bnds.getWidth(), bnds.getHeight() ));
+
+                        /*
+                            Let's change scrollpane Hmin/max and Vmin/max
+                            Whateven are they supposed to be. What's the model?
+                            if image inside of scrollpane is 0-n, then to scroll to see the whole
+                            image, the range needs to be larger than 0-n or exactly 0-n
+                         */
+                        double dImgViewWidth = imgImageView.getFitWidth() * 10.0;
+                        double dImgViewHeight = imgImageView.getFitHeight() * 10.0;
+                        spScrollPane.setHmin( 0.0 ); //- dImgViewWidth);
+                        spScrollPane.setHmax( dImgViewWidth );
+                        spScrollPane.setVmin( 0.0 ); //-dImgViewHeight);
+                        spScrollPane.setVmax( dImgViewHeight );
+
+                        printSysOut(String.format("IMG ScrollEvent ImageView w,h [%.0f, %.0f]", dImgViewWidth, dImgViewHeight));
+
+
+                        event.consume();
+                    }
+                }
+        );
+
         /*
             Let's try a scroll event on the page now and see what we find.
             Let's see if this is called when we pan.
             ****** THIS IS NEVER CALLED **** no clue why
          */
-
+/*
         spScrollPane.setOnScroll(
                 new EventHandler<ScrollEvent>() {
                     @Override
@@ -227,6 +357,7 @@ public class PanImageTestController {
                     }
                 }
         );
+        */
     }
 
 
