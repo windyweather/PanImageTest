@@ -6,12 +6,10 @@ import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
+import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollBar;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -45,6 +43,7 @@ public class PanImageTestController {
     }
 
     public ScrollBar sbSlideToZoom;
+    public Spinner<Double> spinScrollPaneAdjust;
 
     /*
         Center a child in the parent, if the parent contains the child
@@ -63,18 +62,26 @@ public class PanImageTestController {
     /*
      On zoom, adjust scroll bounds to center image if small
      or adjust bounds to allow edges if large
+     Here is where we apply those insane values from the ScrollPanelAdjustmentSpinner
   */
     private void AdjustScrollPane() {
         var x = spScrollPane.getHvalue();
         var y = spScrollPane.getVvalue();
 
+        /*
+            Very confusing. Horizontal vs Width  Vertical vs Height
+         */
+        double imgH = imgImageView.getFitWidth(); // horizontal
+        double imgV = imgImageView.getFitHeight(); // vertical
+        double spH = spScrollPane.getViewportBounds().getWidth();
+        double spV = spScrollPane.getViewportBounds().getHeight();
 
-        double imgW = imgImageView.getFitWidth();
-        double imgH = imgImageView.getFitHeight();
-        double spVW = spScrollPane.getViewportBounds().getWidth();
-        double spVH = spScrollPane.getViewportBounds().getHeight();
-
-        if (imgW < spVW) {
+        double dSpinAdjust = spinScrollPaneAdjust.getValue();
+        printSysOut(String.format("AdjustScrollPane - adjust value %.0f", dSpinAdjust));
+        /*
+            Horizontal stuff
+         */
+        if ( imgH < spH ) {
             spScrollPane.setHmax( 1.0);
             spScrollPane.setHvalue(0.0);
             spScrollPane.setHmin( 0.0);
@@ -82,13 +89,32 @@ public class PanImageTestController {
             y = 0.0;
             spScrollPane.setHvalue(x);
             spScrollPane.setVvalue(y);
-            printSysOut("AdjustScrollPane - center image");
+            printSysOut("AdjustScrollPane - center image horizontally");
         } else {
-            spScrollPane.setHmax( imgW * 20.0);
-            // spScrollPane.setHvalue(1.0);
-            spScrollPane.setHmin( - imgW * 10.0);
-            printSysOut(String.format("AdjustScrollPane - imgW %.0f spVW %.0f", imgW, spVW) );
+            spScrollPane.setHmax( imgH * dSpinAdjust );
+            spScrollPane.setHmin( - imgH );
+            printSysOut(String.format("AdjustScrollPane - ImageView width %.0f ScrollPane Hrange %.0f",
+                    imgH, imgH*dSpinAdjust) );
         }
+        /*
+            Vertical Stuff
+         */
+        if ( imgV < spV ) {
+            spScrollPane.setVmax( 1.0);
+            spScrollPane.setVvalue(0.0);
+            spScrollPane.setVmin( 0.0);
+            x = 0.0;
+            y = 0.0;
+            spScrollPane.setHvalue(x);
+            spScrollPane.setVvalue(y);
+            printSysOut("AdjustScrollPane - center image vertically");
+        } else {
+            spScrollPane.setVmax( imgV * dSpinAdjust);
+            spScrollPane.setVmin( - imgV );
+            printSysOut(String.format("AdjustScrollPane - ImagePane Height %.0f ScrollPane Vrange %.0f",
+                    imgV, imgV * dSpinAdjust) );
+        }
+
         /*
         spScrollPane.setVvalue( );
         spScrollPane.setHvalue( )
@@ -117,6 +143,17 @@ public class PanImageTestController {
         spScrollPane.setPannable(true);
         spScrollPane.setHbarPolicy(AS_NEEDED);
         spScrollPane.setVbarPolicy(AS_NEEDED);
+
+        /*
+            Now set up the spinner for our ScrollPaneAdjustment value
+            If these numbers look insane, just watch the program run. LOL
+         */
+
+        SpinnerValueFactory<Double> spinFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(
+                1000.0, 1000000000000000000.0, 1000.0, 100000.0 );
+
+        spinScrollPaneAdjust.setValueFactory( spinFactory );
+        spinScrollPaneAdjust.editorProperty().get().setAlignment(Pos.CENTER_RIGHT);
 
         /*
             The setFit makes no difference either way
@@ -187,8 +224,14 @@ public class PanImageTestController {
     protected void onHelloButtonClick() {
 
         setStatus("I said do not click that!");
-
-
+        /*
+            Inspect GUI parts to report their sizes
+         */
+        printSysOut(String.format("OnHello Image wh [%.0f,%.0f] Imageview wh [%.0f,%.0f] ScrollPane wh [%.0f,%.0f]",
+                anImage.getWidth(), anImage.getHeight(),
+                imgImageView.getViewport().getWidth(), imgImageView.getViewport().getHeight(),
+                spScrollPane.getWidth(), spScrollPane.getHeight()
+        ));
     }
 
     public void onOpenImageClick(ActionEvent actionEvent) throws FileNotFoundException {
@@ -197,7 +240,10 @@ public class PanImageTestController {
             get stage to use as parent for dialog
             and set a default path for the file chooser
          */
-        File defFile = new File("D:\\MMO_Pictures\\AlienBlackout\\2025_03");
+        //File defFile = new File("D:\\MMO_Pictures\\AlienBlackout\\2025_03");
+        String sDirExamples = System.getProperty("user.dir") + "\\progress";
+
+        File defFile = new File(sDirExamples);
         fileChooser.setInitialDirectory(defFile);
         Stage stage = (Stage) btnOpenImage.getScene().getWindow();
         File selectedImageFile = null;
@@ -258,6 +304,9 @@ public class PanImageTestController {
 
         printSysOut(String.format("image displayed [%.0f, %.0f]", dWidth, dHeight));
 
+
+        AdjustScrollPane();
+
         setStatus(String.format("image displayed [%.0f, %.0f]", dWidth, dHeight));
     }
 
@@ -266,7 +315,6 @@ public class PanImageTestController {
         ** THESE ARE NEVER CALLED **
      */
     public void SPOnMouseDragged(MouseEvent mouseEvent) {
-
 
 
         printSysOut(String.format(" SpOnMouseDragged spScrollPane H V Values [%.2f, %.2f]",
@@ -308,22 +356,33 @@ public class PanImageTestController {
             //imgImageView.setFitWidth( anImage.getWidth() );
 
         /*
+            Adjust the scroll pane stuff with insane values
+         */
+        AdjustScrollPane();
+
+        /*
             Dump stuff out to watch it
          */
-            double dSpH = spScrollPane.getHeight();
-            double dSpW = spScrollPane.getWidth();
-            double dSpHvalue = spScrollPane.getHvalue();
-            double dSpVvalue = spScrollPane.getVvalue();
-            double dSpHmin = spScrollPane.getHmin();
-            double dSpHmax = spScrollPane.getHmax();
+        double dSpH = spScrollPane.getHeight();
+        double dSpW = spScrollPane.getWidth();
+        double dSpHvalue = spScrollPane.getHvalue();
+        double dSpVvalue = spScrollPane.getVvalue();
+        double dSpHmin = spScrollPane.getHmin();
+        double dSpHmax = spScrollPane.getHmax();
 
-            printSysOut(String.format("ImgOnMouseDragged ScrollPane w,h [%.0f, %.0f] hmin,max [%.0f, %.0f] h,v val [%.0f, %.0f]",
-                    dSpH, dSpW, dSpHmin, dSpHmax, dSpHvalue, dSpVvalue
-            ));
-            printSysOut(String.format("ImgOnMouseDragged ImageView view XY [%.0f, %.0f] fitWH [%.0f, %.0f]",
-                    imgImageView.getX(), imgImageView.getY(), imgImageView.getFitWidth(), imgImageView.getFitHeight()));
-            printSysOut(String.format("ImgOnMouseDragged spScrollPane H V [%.2f, %.2f] X,Y [%.2f, %.2f]",
-                    spScrollPane.getHvalue(), spScrollPane.getVvalue(),imgImageView.getX(), imgImageView.getY() ));
+        printSysOut(String.format("ImgOnMouseDragged ScrollPane w,h [%.0f, %.0f] hmin,max [%.0f, %.0f] h,v val [%.0f, %.0f]",
+                dSpH, dSpW, dSpHmin, dSpHmax, dSpHvalue, dSpVvalue
+        ));
+        printSysOut(String.format("ImgOnMouseDragged ImageView view XY [%.0f, %.0f] fitWH [%.0f, %.0f]",
+                imgImageView.getX(), imgImageView.getY(), imgImageView.getFitWidth(), imgImageView.getFitHeight()));
+        printSysOut(String.format("ImgOnMouseDragged spScrollPane H V [%.2f, %.2f] imgView X,Y [%.2f, %.2f]",
+                spScrollPane.getHvalue(), spScrollPane.getVvalue(),imgImageView.getX(), imgImageView.getY() ));
+
+        /*
+            Move Hmin,Hmax to avoid bumping image
+         */
+        printSysOut(String.format("ImgOnMouseDragged spScrollPane Hmin Hmax [%.2f, %.2f] X,Y [%.2f, %.2f]",
+                spScrollPane.getHmin(), spScrollPane.getHmax(),imgImageView.getX(), imgImageView.getY() ));
 
         // don't do this, it breaks it
         //mouseEvent.consume();

@@ -16,7 +16,7 @@ public class PanImageTestApp extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(PanImageTestApp.class.getResource("panimage-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 800, 600);
+        Scene scene = new Scene(fxmlLoader.load(), 900, 600);
         stage.setTitle("Pan Image Test");
         stage.setScene(scene);
         stage.show();
