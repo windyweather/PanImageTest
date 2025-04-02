@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollBar?>
 <?import javafx.scene.control.ScrollPane?>
@@ -16,19 +17,24 @@
   <items>
       <VBox>
          <children>
-            <ScrollPane fx:id="spScrollPane" cacheShape="false" hmax="100000.0" hmin="-100000.0" onMouseDragged="#SPOnMouseDragged" onScroll="#SPOnScroll" onZoom="#SpOnZoom" onZoomFinished="#SpOnZoomFinished" onZoomStarted="#SpOnZoomStarted" pannable="true" vmax="100000.0" vmin="-100000.0" VBox.vgrow="ALWAYS">
+            <ScrollPane fx:id="spScrollPane" cacheShape="false" onMouseDragged="#SPOnMouseDragged" onScroll="#SPOnScroll" onZoom="#SpOnZoom" onZoomFinished="#SpOnZoomFinished" onZoomStarted="#SpOnZoomStarted" pannable="true" VBox.vgrow="ALWAYS">
                <content>
                   <ImageView fx:id="imgImageView" focusTraversable="true" onMouseClicked="#ImgOnMouseClicked" onMouseDragged="#ImgOnMouseDragged" pickOnBounds="true" preserveRatio="true" />
                </content>
             </ScrollPane>
             <HBox alignment="TOP_CENTER">
                <children>
-                  <Label text="Slide to Zoom">
+                  <CheckBox fx:id="cbSlideToZoom" mnemonicParsing="false" text="Slide to Zoom">
                      <padding>
                         <Insets right="20.0" />
                      </padding>
-                  </Label>
+                  </CheckBox>
                   <ScrollBar fx:id="sbSlideToZoom" max="10.0" min="0.1" prefWidth="500.0" unitIncrement="0.1" value="1.0" />
+                  <Label fx:id="lblSliderValue" text="Slide Value">
+                     <padding>
+                        <Insets left="10.0" />
+                     </padding>
+                  </Label>
                </children>
                <padding>
                   <Insets top="10.0" />

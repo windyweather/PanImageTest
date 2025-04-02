@@ -45,6 +45,8 @@ public class PanImageTestController {
 
     public ScrollBar sbSlideToZoom;
     public Spinner<Double> spinScrollPaneAdjust;
+    public CheckBox cbSlideToZoom;
+    public Label lblSliderValue;
 
     /*
         Center a child in the parent, if the parent contains the child
@@ -64,11 +66,22 @@ public class PanImageTestController {
      On zoom, adjust scroll bounds to center image if small
      or adjust bounds to allow edges if large
      Here is where we apply those insane values from the ScrollPanelAdjustmentSpinner
-  */
+    */
+    /*
+        Don't mess with H,V max/min working example never touches them
+     */
     private void AdjustScrollPane() {
         var x = spScrollPane.getHvalue();
         var y = spScrollPane.getVvalue();
 
+        /*
+            Do we even need this?
+            The answer is NO WE DON"T
+         */
+        if ( true )
+        {
+            return;
+        }
         /*
             Very confusing. Horizontal vs Width  Vertical vs Height
          */
@@ -77,8 +90,8 @@ public class PanImageTestController {
         double spH = spScrollPane.getViewportBounds().getWidth();
         double spV = spScrollPane.getViewportBounds().getHeight();
 
-        double dHfraction = (spScrollPane.getHvalue() - spScrollPane.getHmin() ) / (spScrollPane.getHmax() - spScrollPane.getHmin());
-        double dVfraction = (spScrollPane.getVvalue() - spScrollPane.getVmin() ) / (spScrollPane.getVmax() - spScrollPane.getVmin());
+        double dHfraction = imgH / spH;
+        double dVfraction = imgV / spV;
 
         double dSpinAdjust = spinScrollPaneAdjust.getValue();
         printSysOut(String.format("AdjustScrollPane - adjust value %.0f", dSpinAdjust));
@@ -87,45 +100,59 @@ public class PanImageTestController {
         /*
             Horizontal stuff
          */
+        double dHhigh = imgH * dSpinAdjust;
+        double dHlow = -imgH * dSpinAdjust;
+        double dHsize = dHhigh - dHlow;
+        double dHpos = (dHsize * dHfraction) - (dHsize/2.0);
         if ( imgH < spH ) {
-            spScrollPane.setHmax( 1.0);
-            spScrollPane.setHvalue(0.5);
-            spScrollPane.setHmin( 0.0);
+            spScrollPane.setHvalue( dHfraction );
+            if ( true ) {
+                spScrollPane.setHmax(1.0);
+                spScrollPane.setHmin(0.0);
+            }
 
-            printSysOut("AdjustScrollPane - center image horizontally");
+            printSysOut(String.format("AdjustScrollPane - center image horizontally %.0f", dHpos) );
         } else {
             /*
                 Put the Hvalue back at same fraction of new range
              */
-            double dHhigh = imgH * dSpinAdjust;
-            double dHlow = -imgH;
-            double dHpos = (dHhigh - dHlow) * dHfraction;
-            spScrollPane.setHmax( dHhigh );
-            spScrollPane.setHmin( dHlow );
-            spScrollPane.setHvalue( dHpos );
+
+            if (false ) {
+                spScrollPane.setHmax(dHhigh);
+                spScrollPane.setHmin(dHlow);
+                spScrollPane.setHvalue( dHpos );
+            }
+
             printSysOut(String.format("AdjustScrollPane - ImageView width %.0f ScrollPane Hrange %.0f Hpos %.0f",
                     imgH, dHhigh-dHlow, dHpos ));
         }
         /*
             Vertical Stuff
          */
+        double dVhigh = imgV * dSpinAdjust;
+        double dVlow = -imgV * dSpinAdjust;
+        double dVsize = dVhigh - dVlow;
+        double dVpos = (dVsize * dVfraction) - (dVsize/2.0);
         if ( imgV < spV ) {
-            spScrollPane.setVmax( 1.0);
-            spScrollPane.setVvalue(0.5);
-            spScrollPane.setVmin( 0.0);
+            spScrollPane.setVvalue(dVfraction);
+            if ( true ) {
+                spScrollPane.setVmax(1.0);
+                spScrollPane.setVmin(0.0);
+            }
 
-            printSysOut("AdjustScrollPane - center image vertically");
+            printSysOut(String.format("AdjustScrollPane - center image vertically %.0f", dVpos) );
         } else {
 
             /*
                 Put the Vvalue back at same fraction of new range
              */
-            double dVhigh = imgV * dSpinAdjust;
-            double dVlow = -imgV;
-            double dVpos = (dVhigh - dVlow) * dVfraction;
-            spScrollPane.setVmax( dVhigh );
-            spScrollPane.setVmin( dVlow );
-            spScrollPane.setVvalue( dVpos );
+
+            if ( false ) {
+                spScrollPane.setVmax(dVhigh);
+                spScrollPane.setVmin(dVlow);
+                spScrollPane.setVvalue( dVpos );
+            }
+
             printSysOut(String.format("AdjustScrollPane - ImageView height %.0f ScrollPane Vrange %.0f VPos %.0f",
                     imgV, dVhigh-dVlow, dVpos ));
         }
@@ -155,6 +182,10 @@ public class PanImageTestController {
         spScrollPane.setVbarPolicy(AS_NEEDED);
 
         /*
+            make sure checkbox for slide to zoom is not "Indeterminate"
+         */
+        cbSlideToZoom.setSelected(false);
+        /*
             Now set up the spinner for our ScrollPaneAdjustment value
             If these numbers look insane, just watch the program run. LOL
          */
@@ -178,17 +209,39 @@ public class PanImageTestController {
             They make things really hard to read and with IntelliJ inserting
             stuff for you frequently as you edit, sometimes you can get lost
             and have to mess around endlessly to get it put back together. Sigh.
+            ******* Zoom with Slider *********
+            ******* Slider to Zoom *********
          */
         sbSlideToZoom.valueProperty().addListener((o, oldV, newV) -> {
+
+            /*
+                If not using slider to zoom, just leave quietly
+             */
+            if ( !cbSlideToZoom.isSelected() ){
+                return;
+            }
+            if ( anImage == null ) {
+                /*
+                No image yet, so outta here
+                 */
+                return;
+            }
             var x = spScrollPane.getHvalue();
             var y = spScrollPane.getVvalue();
             double dScale = newV.doubleValue();
             double newW = anImage.getWidth() * dScale;
 
+            lblSliderValue.setText(String.format("Zoom %.4f",dScale));
+
             imgImageView.setScaleX( dScale );
             imgImageView.setScaleY( dScale );
-            spScrollPane.setHvalue(x);
-            spScrollPane.setVvalue(y);
+            /*
+            Bad idea I think
+             */
+            if ( false ) {
+                spScrollPane.setHvalue(0.5);
+                spScrollPane.setVvalue(0.5);
+            }
             /*
                 Makes no different whether this is called or not
                 Panning still does not work
@@ -199,7 +252,11 @@ public class PanImageTestController {
                 Adjust the scroll pane scroll bounds based on image size
              */
             AdjustScrollPane();
-
+            //imgImageView.setFitWidth( newW );
+            /*
+                Adjust the imageview viewport to the size of the new image
+             */
+            SetImageViewViewport();
 
             setStatus( String.format("Zoom Scale %.4f", dScale));
             printSysOut(String.format("sbSlideToZoom value %.3f  x,y [%.0f,%.0f] zoom %.4f", newV.doubleValue(), x, y, dScale ));
@@ -218,12 +275,18 @@ public class PanImageTestController {
             just consume the event.
             *** Let's try to zoom on the scroll pane rather than the imageview ***
             *** Well that doesn't work. It scrolls rather than zooming ***
+            ********* Wheel to Zoom ************
          */
 
         imgImageView.setOnScroll(
                 new EventHandler<ScrollEvent>() {
                     @Override
                     public void handle(ScrollEvent event) {
+
+                        if (cbSlideToZoom.isSelected()) {
+                            // Using slider to zoom. Outta here
+                            return;
+                        }
                         double zoomFactor = 1.05;
                         double deltaY = event.getDeltaY();
                     /*
@@ -245,12 +308,31 @@ public class PanImageTestController {
                             zoomFactor = 0.95;
                         }
                         /*
+                            Put the zoom factor in the slider so it is up to date too
+                            FOR SOME F******* reason, a simple setValue does not work
+                            and we can't do ADJUST VALUE because that calls the
+                            other way to zoom... Sigh FREAK'N SIGH
+                         */
+
+                        /*
                             Save the scale factor for later to set the fitwidth
                          */
                         dScaleFactor = imgImageView.getScaleX() * zoomFactor;
                         double dOriginalWidth = imgImageView.getFitWidth();
+
                         /*
-                            Save these values to put back the postion after the zoom
+                            Since the slider is disabled, we can adjust it's value
+                            without a loop of ObserveValue calls
+                            and the label to show us the value
+                         */
+                        sbSlideToZoom.setValue( dScaleFactor );
+                        lblSliderValue.setText(String.format("Zoom %.4f", sbSlideToZoom.getValue()));
+                        printSysOut(String.format("ZoomWheel scaleFactor %.4f slideValue %.4f",
+                                dScaleFactor, sbSlideToZoom.getValue()));
+
+
+                        /*
+                            Save these values to put back the position after the zoom
                          */
                         double dSpVvalue = spScrollPane.getVvalue();
                         double dSpHValue = spScrollPane.getHvalue();
@@ -269,27 +351,42 @@ public class PanImageTestController {
                         double dWidth = imgImageView.getFitWidth();
                         double dHeight = imgImageView.getFitHeight();
 
-
-
                         /*
                             The magic that fixes the pan problem?
                          */
                         double dScaledWidth = anImage.getWidth() * dScaleFactor;
                         printSysOut(String.format("IMG ScrollEvent imgSetFitWidth width %.0f scale factor %.4f newWidth %.4f",
                                 anImage.getWidth(), dScaleFactor, dScaledWidth) );
-                        /*
-                            ***************** this is apparently what made ImagePanZoom test work  ****************
-                            * ********** but it's not working here *************
-                         */
-                        imgImageView.setFitWidth( dScaledWidth ); // we already did this above* dScaleFactor );
-                        //imgImageView.setFitHeight( anImage.getHeight() ); // we already did this above * dScaleFactor );
-                        spScrollPane.setFitToHeight( true );
-                        spScrollPane.setFitToWidth( true );
 
+                        /*
+                            Try fitwidth before and after AdjustScrollPane
+                         */
+                        if (false) {
+                            spScrollPane.setFitToHeight(true);
+                            spScrollPane.setFitToWidth(true);
+                            imgImageView.setFitWidth(dScaledWidth); // we already did this above* dScaleFactor );
+                            //imgImageView.setFitHeight( anImage.getHeight() ); // we already did this above * dScaleFactor );
+                        }
                         /*
                             Adjust Hmax-Hmin etc and Center image if it's small enough
                          */
                         AdjustScrollPane();
+
+
+                         /*
+                            Adjust the imageview viewport when the image changes sizes
+                         */
+                        SetImageViewViewport();
+                        /*
+                         ***************** this is apparently what made ImagePanZoom test work  ****************
+                         * ********** but it's not working here *************
+                         */
+                        if (false) {
+                            spScrollPane.setFitToHeight(true);
+                            spScrollPane.setFitToWidth(true);
+                            imgImageView.setFitWidth(dScaledWidth); // we already did this above* dScaleFactor );
+                            //imgImageView.setFitHeight( anImage.getHeight() ); // we already did this above * dScaleFactor );
+                        }
 
                         /*
                             Disable all this noise for now
@@ -367,6 +464,43 @@ public class PanImageTestController {
     }
 
     /*
+        Apparently, the ImageView displays the Image in a "ViewPort",
+        which is not what is on the screen, but is apparently a
+        Canvas onto which the image is displayed. And if the "ViewPort"
+        is smaller than the image, because the image is scaled, then
+        the Viewport needs to be adjusted to be large enough to cover
+        the whole image, or you can't drag to see the whole image.
+        *** This is working hypothesis at this point ***
+     */
+    private void SetImageViewViewport() {
+
+        /*
+            Set the imageview Viewport from the
+            possibly scaled image
+         */
+        double dExtraFactor = 5.0;
+        /*
+         recall that we have set PreserveRatio so both scales should
+         be the same.
+         */
+
+        double dWidth = anImage.getWidth() * imgImageView.getScaleX();
+        double dHeight = anImage.getHeight() * imgImageView.getScaleY();
+        double dRatio = dWidth / dHeight;
+        if ( false ) {
+            printSysOut(String.format("SetImageViewViewport  ImageView scales [%.0f, %.0f]",
+                    imgImageView.getScaleX(), imgImageView.getScaleY()));
+        }
+        /*
+            Preserve the aspect ratio of the viewport
+         */
+        double dvpW = dWidth*dExtraFactor;
+        double dvpH = dHeight*dExtraFactor;
+        Rectangle2D viewportRect = new Rectangle2D( 0, 0, dvpW, dvpH);
+        imgImageView.setViewport(viewportRect);
+        printSysOut(String.format("SetImageViewViewport  Viewport [%.0f, %.0f]", dvpW, dvpH));
+    }
+    /*
         Open a test image starting in our local folders
         But you can go get any image you want
      */
@@ -412,11 +546,7 @@ public class PanImageTestController {
                 break;
             }
         }
-        /*
-            reset scale factors in case we were messing with them
-         */
-        imgImageView.setScaleX( 1.0 );
-        imgImageView.setScaleY( 1.0 );
+
         /*
             we appear to have a file so we will try to load the image with it.
             Later we need a try catch around this stuff since some of it can toss
@@ -424,23 +554,59 @@ public class PanImageTestController {
          */
         InputStream imageAsStream = new FileInputStream(selectedImageFile);
 
-        anImage  = new Image( imageAsStream );
+        /*
+            Request the image be loaded much larger than it probably is
+            to make panning in the viewport work.
+         */
+        /*
+            Only way I see to get the size is to read it,
+            and then read it again to request it with a larger size
+         */
+        Image imageForSize = new Image( imageAsStream );
+        double dWforSize = imageForSize.getWidth();
+        double dHforSize = imageForSize.getHeight();
+        double dSizeFactor = 2.0;
+
+        printSysOut(String.format("OpenImageClick Image Size 1st time [%.0f, %.0f]", dWforSize, dHforSize));
+        imageAsStream = new FileInputStream(selectedImageFile);
+
+        anImage  = new Image( imageAsStream, dWforSize*dSizeFactor, dHforSize*dSizeFactor, true, true );
         double dWidth = anImage.getWidth();
         double dHeight = anImage.getHeight();
 
-        imgImageView.setFitWidth( dWidth );
-        imgImageView.setFitHeight( dHeight );
+        printSysOut(String.format("OpenImageClick Image Size 2nd time [%.0f, %.0f]", dWidth, dHeight));
+
+        imgImageView.setPreserveRatio( true );
+        imgImageView.setSmooth( true );
         imgImageView.setImage( anImage );
+        imgImageView.setFitWidth( dWidth );
+        //imgImageView.setFitHeight( dHeight );
+
+
+       /*
+            Set scale factors due to "RequestedSize" above.
+            and update GUI to show values
+         */
+        double dScale = 0.5;
+        imgImageView.setScaleX( dScale );
+        lblSliderValue.setText(String.format("Zoom %.4f",dScale));
+        sbSlideToZoom.setValue( dScale );
+
+        /*
+            Set the zoom stuff in the GUI to show us we've reduced the size
+         */
 
         /*
             Did we forget to do this?
             NO! IT MAKES NO F****** DIFFERENCE
          */
-        Rectangle2D viewportRect = new Rectangle2D( 0, 0, dWidth, dHeight);
-        imgImageView.setViewport(viewportRect);
+        SetImageViewViewport();
+        if ( false ) {
+            Rectangle2D viewportRect = new Rectangle2D(0, 0, dWidth * 2.0, dHeight * 2.0);
+            imgImageView.setViewport(viewportRect);
+        }
 
         printSysOut(String.format("image displayed [%.0f, %.0f]", dWidth, dHeight));
-
 
         AdjustScrollPane();
 
@@ -487,6 +653,7 @@ public class PanImageTestController {
 
     /*
         This is called on dragging image
+        ******* Drag Image with Mouse *********
      */
     public void ImgOnMouseDragged(MouseEvent mouseEvent) {
 
@@ -494,11 +661,11 @@ public class PanImageTestController {
             The FitWidth needs to be adjusted by the scale
          */
         double dScale = imgImageView.getScaleX();
-        imgImageView.setFitWidth( anImage.getWidth() * dScale );
+        //imgImageView.setFitWidth( anImage.getWidth() * dScale );
 
         /*
             Adjust the scroll pane stuff with insane values
-            NOT needed
+            NOT needed. Causes insane jerky dragging!!!!
          */
         //AdjustScrollPane();
 
@@ -516,17 +683,22 @@ public class PanImageTestController {
                 dSpH, dSpW, dSpHmin, dSpHmax, dSpHvalue, dSpVvalue
         ));
         /*
+            Do not mess with Hmax, Hmin, Vmax, vmin
+            working example never touches them.
+         */
+        if ( false ) {
+        /*
             Can we brute force the fix?
          */
-        if ( dSpHvalue == dSpHmax ) {
-            spScrollPane.setHmax( dSpHmax + 1000.0);
-            printSysOut(String.format("ImgOnMouseDragged Hmax adjusted to %.0f", dSpHmax+1000) );
+            if (dSpHvalue == dSpHmax) {
+                spScrollPane.setHmax(dSpHmax + 1000.0);
+                printSysOut(String.format("ImgOnMouseDragged Hmax adjusted to %.0f", dSpHmax + 1000));
+            }
+            if (dSpHvalue == dSpHmin) {
+                spScrollPane.setHmin(dSpHmin - 1000.0);
+                printSysOut(String.format("ImgOnMouseDragged Hmin adjusted to %.0f", dSpHmin - 1000));
+            }
         }
-        if ( dSpHvalue == dSpHmin ) {
-            spScrollPane.setHmin( dSpHmin - 1000.0 );
-            printSysOut(String.format("ImgOnMouseDragged Hmin adjusted to %.0f", dSpHmin-1000) );
-        }
-
         if ( false ) {
             printSysOut(String.format("ImgOnMouseDragged ImageView view XY [%.0f, %.0f] fitWH [%.0f, %.0f]",
                     imgImageView.getX(), imgImageView.getY(), imgImageView.getFitWidth(), imgImageView.getFitHeight()));
